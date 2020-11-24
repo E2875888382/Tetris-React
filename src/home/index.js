@@ -1,62 +1,140 @@
 import React from 'react';
 import './index.less';
 import Screen from '../components/Screen';
-import {detectRow, detectColumn, detectCrash, detectErasableList} from '../utils/detect';
-import {removeAndMergeBlock, initScreen, eliminate} from '../utils/screen';
+import Panel from '../components/Panel';
+import Controller from '../components/Controller';
+import {detectRow, detectColumn, detectCrash, detectErasableList, detectGameOver} from '../utils/detect';
+import {removeAndMergeBlock, initScreen, eliminate, calculateScore} from '../utils/screen';
 import {getRandomBlock, getRotatedBlock} from '../utils/blocks';
 
 class App extends React.Component {
     constructor() {
         super();
-        const {newBlock, newPosition, newBlockType, newBlockIndex} = getRandomBlock();
-
         this.state = {
-            block: newBlock,
-            blockType: newBlockType,
-            blockIndex: newBlockIndex,
-            blockPosition: newPosition, // 当前块相对于screen的位置（x, y）
-            screen: initScreen()
+            block: [],
+            blockType: '',
+            blockIndex: 0,
+            blockPosition: [0, 0],
+            nextBlock: [],
+            nextBlockType: '',
+            nextBlockIndex: 0,
+            nextBlockPosition: [0, 0],
+            screen: [],
+            pause: false, // 暂停游戏
+            gameOver: false, // 是否gameOver
+            erasableLines: 0, // 已经消除的行数
+            score: 0 // 积分
         };
     }
     componentDidMount() {
+        this._init();
+        this._drop(500);
+    }
+    _init() {
+        // 构造时生成两个block
+        const {
+            newBlock,
+            newPosition,
+            newBlockType,
+            newBlockIndex
+        } = getRandomBlock();
+        const {
+            newBlock: nextBlock,
+            newPosition: nextBlockPosition,
+            newBlockType: nextBlockType,
+            newBlockIndex: nextBlockIndex 
+        } = getRandomBlock();
+        const newScreen = initScreen();
+
         this.setState((state, props)=> ({
-            screen: this._newScreen(state.block, state.blockPosition),
+            screen: removeAndMergeBlock(newScreen, [], [0, 0], newBlock, newPosition),
+            block: newBlock,
+            blockType: newBlockType,
+            blockIndex: newBlockIndex,
+            blockPosition: newPosition,
+            nextBlock: nextBlock,
+            nextBlockType: nextBlockType,
+            nextBlockIndex: nextBlockIndex,
+            nextBlockPosition: nextBlockPosition,
+            score: 0
         }));
     }
-    // 通过相对位置将block合并到screen中，并返回新的screen
-    _newScreen(newBlock, newPos, oldScreen = []) {
-        // 1. 拷贝一份screen
-        const screen = oldScreen.length > 0 ? oldScreen : this.state.screen;
-        const oldBlock = this.state.block;
-        const oldPos = this.state.blockPosition;
-
-        return removeAndMergeBlock(screen, oldBlock, oldPos, newBlock, newPos);
+    // 掉落任务，可以根据累计消除的行数加快掉落速度
+    _drop(speed) {
+        const timer = setInterval(()=> {
+            if (this.state.gameOver) {
+                clearInterval(timer);
+                alert('game over');
+            };
+            if (this.state.pause) {
+                clearInterval(timer);
+            }
+            this.handleTranslateDown();
+        }, speed);
     }
-    // 统一的边界校验，并最终更新视图
-    _updateScreen(screen, block, blockPosition, blockIndex) {
-        // 1. 检测宽
-        if (!detectRow(screen, blockPosition)) return; 
-        // 2. 检测高
-        if (!detectColumn(block, blockPosition)) return;
-        // 3. 检测block碰撞
-        if (detectCrash(screen)) return ;
-        // 4. 检测是否能消除
-        const erasableLines = detectErasableList(screen);
+    // 在screen中生成新的block
+    _addNewBlock(screen) {
+        // 将next更新到当前，生成新的block到next中
+        const {newBlock, newPosition, newBlockType, newBlockIndex} = getRandomBlock();
+        const newScreen = removeAndMergeBlock(screen, [], [0, 0], this.state.nextBlock, this.state.nextBlockPosition);
 
-        if (erasableLines.length > 0) {
-            const {newBlock, newPosition} = getRandomBlock();
-            const eliminatedScreen = eliminate(screen, erasableLines); // 消除后的screen
-            // 添加新的随机block, 更新screen，触发消除动画
+        this.setState((state, props)=> ({
+            screen: newScreen,
+            block: state.nextBlock,
+            blockType: state.nextBlockType,
+            blockIndex: state.nextBlockIndex,
+            blockPosition: state.nextBlockPosition,
+            nextBlock: newBlock,
+            nextBlockType: newBlockType,
+            nextBlockIndex: newBlockIndex,
+            nextBlockPosition: newPosition
+        }));
+    }
+    // 更新视图都需要经过统一的校验
+    _updateScreen(screen, block, blockPosition, blockIndex, control) {
+        // 1. 水平方向移动和旋转需要检测行越界
+        if (control === 'horizontal' || control === 'rotate') {
+            if (!detectRow(screen, blockPosition, block)) return; 
+        }
+        // 2. 下落和旋转需要检测高越界
+        if (control === 'down' || control === 'rotate') {
+            if (!detectColumn(block, blockPosition)) {
+                if (control === 'down') this._addNewBlock(this.state.screen);
+                return;
+            };
+        }
+        // 3. 检测游戏是否结束
+        if (detectGameOver(screen)) {
             this.setState((state, props)=> ({
-                blockPosition: newPosition,
-                screen: this._newScreen(newBlock, newPosition, eliminatedScreen),
-                block: newBlock,
-                blockIndex: blockIndex
+                gameOver: true,
+                score: 0
             }));
             return;
         }
-        // 5. 检测是否到底了，产生新的块
+        // 4. 检测block碰撞
+        if (detectCrash(screen)) {
+            // Y轴碰撞(向下移动造成的碰撞),说明应该要出新block了
+            if (control === 'down') this._addNewBlock(this.state.screen);
+            return;
+        };
+        // 5. 检测是否能消除
+        const erasableLines = detectErasableList(screen);
 
+        if (erasableLines.length > 0) {
+            // 保存消除的行数，并计算积分
+            const score = calculateScore(erasableLines);
+
+            this.setState((state, props)=> ({
+                erasableLines: state.erasableLines + erasableLines.length,
+                score: state.score + score
+            }));
+            // 获取经过消除后的screen
+            const eliminatedScreen = eliminate(screen, erasableLines); 
+            // 这里要触发消除动画
+            this._addNewBlock(eliminatedScreen);
+            return;
+        }
+        // 通过检验后更新状态
         this.setState((state, props)=> ({
             blockPosition: blockPosition,
             screen: screen,
@@ -64,27 +142,30 @@ class App extends React.Component {
             blockIndex: blockIndex
         }));
     }
-    // 左右平移，需要进行边界检测
+    // 左右平移
     handleTranslateX(direction) {
         const [posX, posY] = this.state.blockPosition;
         const newPos = [direction === 'left' ? posX - 1: posX + 1, posY];
 
         this._updateScreen(
-            this._newScreen(this.state.block, newPos),
+            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, this.state.block, newPos),
             this.state.block,
             newPos,
-            this.state.blockIndex
+            this.state.blockIndex,
+            'horizontal'
         );
     }
     // 向下移动
     handleTranslateDown() {
         const [posX, posY] = this.state.blockPosition;
+        const newPos = [posX, posY + 1];
 
         this._updateScreen(
-            this._newScreen(this.state.block, [posX, posY + 1]),
+            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, this.state.block, newPos),
             this.state.block, 
-            [posX, posY + 1],
-            this.state.blockIndex
+            newPos,
+            this.state.blockIndex,
+            'down'
         );
     }
     // 旋转方法
@@ -93,27 +174,42 @@ class App extends React.Component {
         const {block, blockIndex} = getRotatedBlock(this.state.blockType, this.state.blockIndex, clockwise);
 
         this._updateScreen(
-            this._newScreen(block, this.state.blockPosition),
+            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, block, this.state.blockPosition),
             block,
             this.state.blockPosition,
-            blockIndex
+            blockIndex,
+            'rotate'
         );
+    }
+    // 重新开始
+    handelRestart() {
+        // 这里需要添加清除全部的动画
+        this._init();
+    }
+    // 暂停
+    handlePause() {
+        this.setState((state, props)=> {
+            if (state.pause) this._drop(500);
+            return {
+                pause: !state.pause
+            }
+        });
     }
     render() {
         return (
             <div className="container">
                 <Screen screen={this.state.screen} />
-                <div className="controller-box">
-                    <div className="direction_controller">
-                        <div onClick={this.handleTranslateX.bind(this, 'left')} className="button button_left"></div>
-                        <div onClick={this.handleTranslateX.bind(this, 'right')} className="button button_right"></div>
-                        <div onClick={this.handleTranslateDown.bind(this)} className="button button_down"></div>
-                    </div>
-                    <div className="rotate_controller">
-                        <div onClick={this.handleRotate.bind(this, 'clockwise')} className="button">顺</div>
-                        <div onClick={this.handleRotate.bind(this, 'anticlockwise')} className="button">逆</div>
-                    </div>
-                </div>
+                <Panel 
+                    nextBlock={this.state.nextBlock} 
+                    score={this.state.score}
+                />
+                <Controller 
+                    handleTranslateX={this.handleTranslateX.bind(this)}
+                    handleTranslateDown={this.handleTranslateDown.bind(this)}
+                    handleRotate={this.handleRotate.bind(this)}
+                    handleRestart={this.handelRestart.bind(this)}
+                    handlePause={this.handlePause.bind(this)}
+                />
             </div>
         );
     }

@@ -1,3 +1,5 @@
+import {detectColumn} from './detect';
+
 // 初始化空白screen
 export function initScreen() {
     let row = new Array(20);
@@ -36,9 +38,13 @@ export function mergeNewBlock(newBlock, [newPosX, newPosY], screen) {
     for (let i = 0; i < 20; i++) {
         temp[i] = screen[i].slice();
     }
+    // 合并之前检查newBlock合法性，不合法的就不合并，防止取值的时候越界
+    if (!detectColumn(newBlock, [newPosX, newPosY])) {
+        return temp;
+    }
     for (let i = 0; i < len; i++) {
         for (let j = 0; j < newBlock[i].length; j++) {
-            if (newBlock[i][j] === 1 && ((i + newPosY) < 20)) {
+            if (newBlock[i][j] === 1) {
                 temp[i + newPosY][j + newPosX] += 1;
             }
         }
@@ -61,6 +67,18 @@ export const eliminate = (screen, erasableLines)=> {
     for (let i = 0, len = erasableLines.length; i < len; i++) {
         rest.unshift(new Array(10).fill(0));
     }
-
     return rest;
+}
+
+// 根据消除的行数计算积分
+export function calculateScore(erasableLines) {
+    const len = erasableLines.length;
+
+    if (len >= 0 && len <= 2) {
+        return 100;
+    } else if (len > 3 && len <= 6) {
+        return 1000;
+    } else {
+        return 2000;
+    }
 }

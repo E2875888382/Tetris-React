@@ -1,7 +1,18 @@
 // 检测行越界
-export function detectRow(screen, [posX, posY]) {
+export function detectRow(screen, [posX, posY], block) {
     const legalRow = screen.every(row=> row.length <= 10);
-    const legalPosX = posX >= 0;
+    // 获取block的最左点
+    let leftPointList = [];
+
+    for (let i = 0, len = block.length; i < len; i++) {
+        for (let j = 0; j < block[i].length; j++) {
+            if (block[i][j] === 1) {
+                leftPointList.push(j);
+                continue;
+            };
+        }
+    }
+    const legalPosX = (posX + Math.min.apply(null, leftPointList)) >= 0;
 
     return legalRow && legalPosX;
 }
@@ -12,7 +23,16 @@ export function detectColumn(block, [posX, posY]) {
     const blockHeight = block.length;
     // block中有值的最低点
     let lowestPoint = 0;
+    // block中有值的最高点
+    let highestPoint = 0;
 
+    // 从前往后遍历，获取最高点
+    for (let i = 0; i < blockHeight; i++) {
+        if (block[i].includes(1)) {
+            highestPoint = i;
+            break;
+        }
+    }
     // 从后往前遍历，获取最低点
     for (let i = blockHeight - 1; i > 0; i--) {
         if (block[i].includes(1)) {
@@ -20,11 +40,11 @@ export function detectColumn(block, [posX, posY]) {
             break;
         }
     }
-
     // block在screen的最低点 = 相对高度 + block最低点 + 1
-    const totalHeight = posY + lowestPoint + 1;
+    const maxHeight = posY + lowestPoint + 1;
+    const minHeight = posY + highestPoint + 1;
 
-    return totalHeight <= 20;
+    return maxHeight <= 20 && minHeight > 0;
 }
 
 // 检测screen中是否存在碰撞
@@ -48,4 +68,10 @@ export function detectErasableList(screen) {
         }
     }
     return res;
+}
+
+// 检测游戏是否结束，也就是格子堆到顶了
+export function detectGameOver(screen) {
+    // 游戏结束？ => 第一行出现碰撞
+    return screen[0].some(item=> item > 1);
 }
