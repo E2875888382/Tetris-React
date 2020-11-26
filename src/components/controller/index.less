@@ -1,3 +1,5 @@
+@directionButtonSize: 60px;
+@rotateButtonSize: 40px;
 .background(@from, @to){
     background: (@from + @to)/2;
     background: -webkit-gradient(linear, left top, left bottom, from(@from), to(@to));
@@ -7,86 +9,79 @@
 }
 .controller-box {
     display: flex;
-    justify-content: space-evenly;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 250px;
     width: 300px;
-    margin: 20px auto;
+    margin: 0 auto;
+    padding: 20px;
 }
 .rotate_controller {
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: space-around;
-    width: 80px;
-    height: 100px;
+    width: 200px;
+    height: 80px;
     .button {
         display: flex;
         justify-content: center;
         align-items: center;
-        width: 100px;
-        height: 40px;
+        width: @rotateButtonSize;
+        height: @rotateButtonSize;
         margin-bottom: 5px;
         background: yellowgreen;
-        border-radius: 10px;
+        border-radius: 50%;
         box-shadow: 2px 2px 4px gray;
         color: gray;
-        font-size: 20px;
+        font-size: 10px;
     }
 }
 .direction_controller {
     position: relative;
-    width: 180px;
-    height: 120px;
+    width: 200px;
+    height: 200px;
     .button {
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        .background(#4bc441, #0ec400);
-        box-shadow: 2px 2px 4px gray;
+        width: @directionButtonSize;
+        height: @directionButtonSize;
+        border-radius: 10px;
         &_left {
             position: absolute;
             left: 0px;
-            &::after {
-                position: absolute;
-                top: 50%;
-                left: 45%;
-                transform: translate(-50%, -50%);
-                content: '';
-                width: 0;
-                border-top: 14px solid transparent;
-                border-bottom: 14px solid transparent;
-                border-right: 24px solid gray;
-            }
+            top: 70px;
+            background: url('../../assets/img/right.gif') no-repeat;
+            background-size: 110% 110%;
+            background-position: center center;
+            transform: rotate(180deg);
+            box-shadow: -2px -2px 4px gray;
         }
         &_right {
             position: absolute;
-            left: 120px;
-            &::after {
-                position: absolute;
-                top: 50%;
-                left: 55%;
-                transform: translate(-50%, -50%);
-                content: '';
-                width: 0;
-                border-top: 14px solid transparent;
-                border-bottom: 14px solid transparent;
-                border-left: 24px solid gray;
-            }
+            top: 70px;
+            left: 140px;
+            background: url('../../assets/img/right.gif') no-repeat;
+            background-size: 110% 110%;
+            background-position: center center;
+            box-shadow: 2px 2px 4px gray;
         }
         &_down {
             position: absolute;
-            left: 60px;
-            bottom: 0px;
-            &::after {
-                position: absolute;
-                top: 55%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                content: '';
-                width: 0;
-                border-left: 14px solid transparent;
-                border-right: 14px solid transparent;
-                border-top: 24px solid gray;
-            }
+            left: 70px;
+            top: 140px;
+            background: url('../../assets/img/down.gif') no-repeat;
+            background-size: 110% 110%;
+            background-position: center center;
+            box-shadow: 2px 2px 4px gray;
+        }
+        &_top {
+            position: absolute;
+            left: 70px;
+            top: 0;
+            background: url('../../assets/img/down.gif') no-repeat;
+            background-size: 110% 110%;
+            background-position: center center;
+            transform: rotate(180deg);
+            box-shadow: -2px -2px 4px gray;
         }
     }
 }

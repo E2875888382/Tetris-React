@@ -4,9 +4,9 @@ import style from './index.module.less';
 export default function Panel(props) {
     return (
         <div className={style.container}>
-            <div className={style.score_panel}>
-                <span className={style.title}>score:</span>
-                <span>{props.score}</span>
+            <div className={style.scopre_panel}>
+                <p className={style.title}>score:</p>
+                <p className={style.score}>{props.score}</p>
             </div>
             <div className={style.next_block}>
                 <span className={style.title}>next:</span>

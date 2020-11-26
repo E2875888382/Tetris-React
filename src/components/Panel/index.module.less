@@ -1,44 +1,51 @@
+@blockSize: 15px;
 .container {
-    width: 250px;
-    margin: 0 auto;
-    padding: 20px;
+    width: 70px;
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
 }
 .score_panel {
     display: inline-block;
-    width: 100px;
+    width: 70px;
 }
 .next_block {
     display: inline-block;
-    width: 100px;
+    width: 70px;
 }
 .screen__row {
-    height: 24px;
+    height: @blockSize + 2;
 }
 .screen__item {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin: 1px;
+    width: @blockSize;
+    height: @blockSize;
     border: 1px solid #333;
     border-color: #987f0f #fae36c #fae36c #987f0f;
-    background: #fff;
-    line-height: 20px;
+    background: #9ead86;
+    line-height: @blockSize;
     &_black {
         display: inline-block;
-        width: 20px;
-        height: 20px;
-        margin: 1px;
+        width: @blockSize;
+        height: @blockSize;
         border: 1px solid #333;
         border-color: #987f0f #fae36c #fae36c #987f0f;
         background: #333;
-        line-height: 20px;
+        line-height: @blockSize;
     }
 }
 .title {
+    margin: 0;
     font-size: 30px;
     font-weight: bold;
-    color: #333;
+    color: #FFF;
+    line-height: 50px;
+}
+.score {
+    margin: 0;
+    font-size: 20px;
+    font-weight: bold;
+    color: #FFF;
+    text-align: center;
+    line-height: 50px;
 }

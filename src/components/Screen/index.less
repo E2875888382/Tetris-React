@@ -1,27 +1,25 @@
+@blockSize: 15px;
 .screen {
-    width: 240px;
-    margin: 0 auto;
+    width: 170px;
 }
 .screen__row {
-    height: 24px;
+    height: @blockSize + 2;
 }
 .screen__item {
     display: inline-block;
-    width: 20px;
-    height: 20px;
-    margin: 1px;
+    width: @blockSize;
+    height: @blockSize;
     border: 1px solid #333;
     border-color: #987f0f #fae36c #fae36c #987f0f;
     background: #9ead86;
-    line-height: 20px;
+    line-height: @blockSize;
     &_black {
         display: inline-block;
-        width: 20px;
-        height: 20px;
-        margin: 1px;
+        width: @blockSize;
+        height: @blockSize;
         border: 1px solid #333;
         border-color: #987f0f #fae36c #fae36c #987f0f;
         background: #333;
-        line-height: 20px;
+        line-height: @blockSize;
     }
 }

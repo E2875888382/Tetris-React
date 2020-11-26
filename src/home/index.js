@@ -65,11 +65,13 @@ class App extends React.Component {
             if (this.state.gameOver) {
                 clearInterval(timer);
                 alert('game over');
+                return;
             };
             if (this.state.pause) {
                 clearInterval(timer);
+                return;
             }
-            this.handleTranslateDown();
+            this.handleTranslate('down');
         }, speed);
     }
     // 在screen中生成新的block
@@ -93,7 +95,7 @@ class App extends React.Component {
     // 更新视图都需要经过统一的校验
     _updateScreen(screen, block, blockPosition, blockIndex, control) {
         // 1. 水平方向移动和旋转需要检测行越界
-        if (control === 'horizontal' || control === 'rotate') {
+        if (control === 'left' || control === 'right' || control === 'rotate') {
             if (!detectRow(screen, blockPosition, block)) return; 
         }
         // 2. 下落和旋转需要检测高越界
@@ -142,36 +144,39 @@ class App extends React.Component {
             blockIndex: blockIndex
         }));
     }
-    // 左右平移
-    handleTranslateX(direction) {
+    // 控制方向
+    handleTranslate(direction) {
+        // 暂停的时候禁止移动
+        if (this.state.pause) return;
         const [posX, posY] = this.state.blockPosition;
-        const newPos = [direction === 'left' ? posX - 1: posX + 1, posY];
+        let newPos;
 
+        switch (direction) {
+            case 'left': 
+                newPos = [posX - 1, posY];
+                break;
+            case 'right':
+                newPos = [posX + 1, posY];
+                break;
+            case 'down':
+                newPos = [posX, posY + 1];
+                break;
+            default: 
+                break;
+        }
         this._updateScreen(
             removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, this.state.block, newPos),
             this.state.block,
             newPos,
             this.state.blockIndex,
-            'horizontal'
-        );
-    }
-    // 向下移动
-    handleTranslateDown() {
-        const [posX, posY] = this.state.blockPosition;
-        const newPos = [posX, posY + 1];
-
-        this._updateScreen(
-            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, this.state.block, newPos),
-            this.state.block, 
-            newPos,
-            this.state.blockIndex,
-            'down'
+            direction
         );
     }
     // 旋转方法
-    handleRotate(direction) {
-        const clockwise = direction === 'clockwise';
-        const {block, blockIndex} = getRotatedBlock(this.state.blockType, this.state.blockIndex, clockwise);
+    handleRotate() {
+        // 暂停的时候禁止旋转
+        if (this.state.pause) return;
+        const {block, blockIndex} = getRotatedBlock(this.state.blockType, this.state.blockIndex, true);
 
         this._updateScreen(
             removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, block, this.state.blockPosition),
@@ -197,15 +202,16 @@ class App extends React.Component {
     }
     render() {
         return (
-            <div className="container">
-                <Screen screen={this.state.screen} />
-                <Panel 
-                    nextBlock={this.state.nextBlock} 
-                    score={this.state.score}
-                />
+            <div className="main-container">
+                <div className="game-box">
+                    <Screen screen={this.state.screen} />
+                    <Panel 
+                        nextBlock={this.state.nextBlock} 
+                        score={this.state.score}
+                    />
+                </div>
                 <Controller 
-                    handleTranslateX={this.handleTranslateX.bind(this)}
-                    handleTranslateDown={this.handleTranslateDown.bind(this)}
+                    handleTranslate={this.handleTranslate.bind(this)}
                     handleRotate={this.handleRotate.bind(this)}
                     handleRestart={this.handelRestart.bind(this)}
                     handlePause={this.handlePause.bind(this)}
