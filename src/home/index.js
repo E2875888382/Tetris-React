@@ -23,7 +23,8 @@ class App extends React.Component {
             pause: false, // 暂停游戏
             gameOver: false, // 是否gameOver
             erasableLines: 0, // 已经消除的行数
-            score: 0 // 积分
+            score: 0, // 积分
+            erasableLinesList: [] // 需要消除的行数，用于添加动画
         };
     }
     componentDidMount() {
@@ -32,19 +33,15 @@ class App extends React.Component {
     }
     _init() {
         // 构造时生成两个block
-        const {
-            newBlock,
-            newPosition,
-            newBlockType,
-            newBlockIndex
-        } = getRandomBlock();
+        const newScreen = initScreen();
+        const {newBlock, newPosition, newBlockType, newBlockIndex} = getRandomBlock();
         const {
             newBlock: nextBlock,
             newPosition: nextBlockPosition,
             newBlockType: nextBlockType,
             newBlockIndex: nextBlockIndex 
         } = getRandomBlock();
-        const newScreen = initScreen();
+        
 
         this.setState((state, props)=> ({
             screen: removeAndMergeBlock(newScreen, [], [0, 0], newBlock, newPosition),
@@ -71,7 +68,7 @@ class App extends React.Component {
                 clearInterval(timer);
                 return;
             }
-            this.handleTranslate('down');
+            this.handleControl('down');
         }, speed);
     }
     // 在screen中生成新的block
@@ -92,16 +89,50 @@ class App extends React.Component {
             nextBlockPosition: newPosition
         }));
     }
+    _eliminate(screen) {
+        // 检测是否能消除
+        const erasableLines = detectErasableList(screen);
+
+        if (erasableLines.length > 0) {
+            // 保存消除的行数，并计算积分
+            const score = calculateScore(erasableLines);
+            // 获取经过消除后的screen
+            const eliminatedScreen = eliminate(screen, erasableLines); 
+
+            this.setState((state, props)=> ({
+                erasableLines: state.erasableLines + erasableLines.length,
+                score: state.score + score,
+                // erasableLinesList: erasableLines,
+                // pause: true
+            }));
+            this._addNewBlock(eliminatedScreen);
+            // setTimeout(()=> {
+            //     this._addNewBlock(eliminatedScreen);
+            //     // 这里要触发消除动画
+            //     this.setState((state, props)=> {
+            //         this._drop(500);
+            //         return {
+            //             erasableLinesList: [],
+            //             pause: false
+            //         };
+            //     });
+            // }, 1000);
+        } else {
+            this._addNewBlock(this.state.screen);
+        }  
+    }
     // 更新视图都需要经过统一的校验
     _updateScreen(screen, block, blockPosition, blockIndex, control) {
         // 1. 水平方向移动和旋转需要检测行越界
-        if (control === 'left' || control === 'right' || control === 'rotate') {
+        if (['left', 'right', 'rotate'].indexOf(control) !== -1) {
             if (!detectRow(screen, blockPosition, block)) return; 
         }
         // 2. 下落和旋转需要检测高越界
-        if (control === 'down' || control === 'rotate') {
+        if (['down', 'rotate'].indexOf(control) !== -1) {
             if (!detectColumn(block, blockPosition)) {
-                if (control === 'down') this._addNewBlock(this.state.screen);
+                if (control === 'down') {
+                    this._eliminate(screen);
+                };
                 return;
             };
         }
@@ -115,27 +146,11 @@ class App extends React.Component {
         }
         // 4. 检测block碰撞
         if (detectCrash(screen)) {
-            // Y轴碰撞(向下移动造成的碰撞),说明应该要出新block了
-            if (control === 'down') this._addNewBlock(this.state.screen);
+            if (control === 'down') {
+                this._eliminate(screen);
+            };
             return;
         };
-        // 5. 检测是否能消除
-        const erasableLines = detectErasableList(screen);
-
-        if (erasableLines.length > 0) {
-            // 保存消除的行数，并计算积分
-            const score = calculateScore(erasableLines);
-
-            this.setState((state, props)=> ({
-                erasableLines: state.erasableLines + erasableLines.length,
-                score: state.score + score
-            }));
-            // 获取经过消除后的screen
-            const eliminatedScreen = eliminate(screen, erasableLines); 
-            // 这里要触发消除动画
-            this._addNewBlock(eliminatedScreen);
-            return;
-        }
         // 通过检验后更新状态
         this.setState((state, props)=> ({
             blockPosition: blockPosition,
@@ -144,52 +159,74 @@ class App extends React.Component {
             blockIndex: blockIndex
         }));
     }
-    // 控制方向
-    handleTranslate(direction) {
+    // 控制方向和旋转
+    handleControl(direction) {
         // 暂停的时候禁止移动
         if (this.state.pause) return;
-        const [posX, posY] = this.state.blockPosition;
-        let newPos;
+        const {
+            screen: oldScreen,
+            block: oldBlock,
+            blockIndex: oldBlockIndex,
+            blockType: oldBlockType,
+            blockPosition: [posX, posY]
+        } = this.state;
 
         switch (direction) {
             case 'left': 
-                newPos = [posX - 1, posY];
+                this._updateScreen(
+                    removeAndMergeBlock(oldScreen, oldBlock, [posX, posY], oldBlock, [posX - 1, posY]),
+                    oldBlock,
+                    [posX - 1, posY],
+                    oldBlockIndex,
+                    direction
+                );
                 break;
             case 'right':
-                newPos = [posX + 1, posY];
+                this._updateScreen(
+                    removeAndMergeBlock(oldScreen, oldBlock, [posX, posY], oldBlock, [posX + 1, posY]),
+                    oldBlock,
+                    [posX + 1, posY],
+                    oldBlockIndex,
+                    direction
+                );
                 break;
             case 'down':
-                newPos = [posX, posY + 1];
+                this._updateScreen(
+                    removeAndMergeBlock(oldScreen, oldBlock, [posX, posY], oldBlock, [posX, posY + 1]),
+                    oldBlock,
+                    [posX, posY + 1],
+                    oldBlockIndex,
+                    direction
+                );
+                break;
+            case 'rotate':
+                const {block, blockIndex} = getRotatedBlock(oldBlockType, oldBlockIndex, true);
+
+                this._updateScreen(
+                    removeAndMergeBlock(oldScreen, oldBlock, [posX, posY], block, [posX, posY]),
+                    block,
+                    [posX, posY],
+                    blockIndex,
+                    direction
+                );
                 break;
             default: 
                 break;
         }
-        this._updateScreen(
-            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, this.state.block, newPos),
-            this.state.block,
-            newPos,
-            this.state.blockIndex,
-            direction
-        );
-    }
-    // 旋转方法
-    handleRotate() {
-        // 暂停的时候禁止旋转
-        if (this.state.pause) return;
-        const {block, blockIndex} = getRotatedBlock(this.state.blockType, this.state.blockIndex, true);
-
-        this._updateScreen(
-            removeAndMergeBlock(this.state.screen, this.state.block, this.state.blockPosition, block, this.state.blockPosition),
-            block,
-            this.state.blockPosition,
-            blockIndex,
-            'rotate'
-        );
     }
     // 重新开始
     handelRestart() {
-        // 这里需要添加清除全部的动画
-        this._init();
+        let erasableLinesList = [...new Array(20).keys()];
+        // 添加清除全部的动画
+        this.setState((state, props)=> ({
+            erasableLinesList: erasableLinesList
+        }));
+        setTimeout(()=> {
+            this.setState((state, props)=> ({
+                erasableLinesList: []
+            }));
+            this._init();
+        }, 1000);
     }
     // 暂停
     handlePause() {
@@ -204,15 +241,17 @@ class App extends React.Component {
         return (
             <div className="main-container">
                 <div className="game-box">
-                    <Screen screen={this.state.screen} />
+                    <Screen 
+                        screen={this.state.screen} 
+                        erasableLinesList={this.state.erasableLinesList}
+                    />
                     <Panel 
                         nextBlock={this.state.nextBlock} 
                         score={this.state.score}
                     />
                 </div>
                 <Controller 
-                    handleTranslate={this.handleTranslate.bind(this)}
-                    handleRotate={this.handleRotate.bind(this)}
+                    handleControl={this.handleControl.bind(this)}
                     handleRestart={this.handelRestart.bind(this)}
                     handlePause={this.handlePause.bind(this)}
                 />

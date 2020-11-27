@@ -1,5 +1,15 @@
 import {detectColumn} from './detect';
 
+// screen二维数组浅拷贝
+function copy(arr) {
+    let res = new Array(10);
+
+    for (let i = 0; i < 20; i++) {
+        res[i] = arr[i].slice();
+    }
+    return res;
+}
+
 // 初始化空白screen
 export function initScreen() {
     let row = new Array(20);
@@ -12,13 +22,9 @@ export function initScreen() {
 
 // 从screen中移除block，返回screen
 export function removeOldBlock(oldBlock, [oldPosX, oldPosY], screen) {
-    let temp = new Array(10);
+    let temp = copy(screen);
     const len = oldBlock.length;
 
-    // 拷贝screen
-    for (let i = 0; i < 20; i++) {
-        temp[i] = screen[i].slice();
-    }
     for (let i = 0; i < len; i++) {
         for (let j = 0, l = oldBlock[i].length; j < l; j++) {
             if (oldBlock[i][j] === 1) {
@@ -31,16 +37,12 @@ export function removeOldBlock(oldBlock, [oldPosX, oldPosY], screen) {
 
 // 将block合并入screen，返回screen
 export function mergeNewBlock(newBlock, [newPosX, newPosY], screen) {
-    let temp = new Array(10);
+    let temp = copy(screen);
     const len = newBlock.length;
 
-    // 拷贝screen
-    for (let i = 0; i < 20; i++) {
-        temp[i] = screen[i].slice();
-    }
     // 合并之前检查newBlock合法性，不合法的就不合并，防止取值的时候越界
     if (!detectColumn(newBlock, [newPosX, newPosY])) {
-        return temp;
+        return [];
     }
     for (let i = 0; i < len; i++) {
         for (let j = 0; j < newBlock[i].length; j++) {
@@ -57,7 +59,8 @@ export function removeAndMergeBlock(screen, oldBlock, [oldPosX, oldPosY], newBlo
     const tempScreen = removeOldBlock(oldBlock, [oldPosX, oldPosY], screen);
     const newScreen = mergeNewBlock(newBlock, [newPosX, newPosY], tempScreen);
 
-    return newScreen;
+    // 越界无法操作时按原值返回
+    return newScreen.length > 0 ? newScreen : screen;
 }
 
 // 消除所有可消除的行，并返回新screen 
@@ -74,11 +77,11 @@ export const eliminate = (screen, erasableLines)=> {
 export function calculateScore(erasableLines) {
     const len = erasableLines.length;
 
-    if (len >= 0 && len <= 2) {
+    if (len >= 0 && len < 2) {
         return 100;
-    } else if (len > 3 && len <= 6) {
-        return 1000;
+    } else if (len >= 2 && len < 4) {
+        return 500;
     } else {
-        return 2000;
+        return 1000;
     }
 }

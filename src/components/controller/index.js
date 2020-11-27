@@ -2,7 +2,7 @@ import React from 'react';
 import './index.less';
 
 export default function Controller(props) {
-    const {handleTranslate, handleRotate, handleRestart, handlePause} = props;
+    const {handleControl, handleRestart, handlePause} = props;
 
     return (
         <div className="controller-box">
@@ -11,10 +11,10 @@ export default function Controller(props) {
                 <div onClick={()=> handlePause()} className="button">暂停</div>
             </div>
             <div className="direction_controller">
-                <div onClick={()=> handleRotate()} className="button button_top"></div>
-                <div onClick={()=> handleTranslate('left')} className="button button_left"></div>
-                <div onClick={()=> handleTranslate('right')} className="button button_right"></div>
-                <div onClick={()=> handleTranslate('down')} className="button button_down"></div>
+                <div onClick={()=> handleControl('rotate')} className="button button_top"></div>
+                <div onClick={()=> handleControl('left')} className="button button_left"></div>
+                <div onClick={()=> handleControl('right')} className="button button_right"></div>
+                <div onClick={()=> handleControl('down')} className="button button_down"></div>
             </div>
         </div>
     );
