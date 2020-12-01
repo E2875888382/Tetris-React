@@ -1,187 +1,4 @@
-const blocks = {
-    O: [
-        [
-            [1, 1, 0, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 0, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 0, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 0, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ]
-    ],
-    I: [
-        [
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0]
-        ],
-        [
-            [1, 1, 1, 1],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 1],
-            [0, 0, 0, 1],
-            [0, 0, 0, 1],
-            [0, 0, 0, 1]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [1, 1, 1, 1]
-        ]
-    ],
-    S: [
-        [
-            [0, 1, 1, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 0, 0],
-            [0, 1, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 1, 1, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 0, 0, 0],
-            [1, 1, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0]
-        ]
-    ],
-    Z: [
-        [
-            [1, 1, 0, 0],
-            [0, 1, 1, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 1, 0],
-            [0, 1, 1, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [1, 1, 0, 0],
-            [0, 1, 1, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 0, 0],
-            [1, 1, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0]
-        ]
-    ],
-    L: [
-        [
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 1, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 1, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [0, 0, 1, 0],
-            [1, 1, 1, 0],
-            [0, 0, 0, 0]
-        ]
-    ],
-    J: [
-        [
-            [0, 0, 1, 0],
-            [0, 0, 1, 0],
-            [0, 1, 1, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 0, 0, 0],
-            [1, 0, 0, 0],
-            [1, 1, 1, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 0, 0],
-            [1, 0, 0, 0],
-            [1, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [1, 1, 1, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ]
-    ],
-    T: [
-        [
-            [0, 0, 0, 0],
-            [1, 1, 1, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 0, 0],
-            [1, 1, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 0, 0],
-            [1, 1, 1, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ],
-        [
-            [0, 1, 0, 0],
-            [0, 1, 1, 0],
-            [0, 1, 0, 0],
-            [0, 0, 0, 0]
-        ]
-    ]
-}
+import {blocks} from './shapes';
 
 // 随机取出一个block
 export function getRandomBlock() {
@@ -218,10 +35,10 @@ export function getRandomBlock() {
     }
 
     return {
-        newBlock: randomBlock,
-        newBlockIndex: randomListIndex,
-        newPosition: [randomX, randomY],
-        newBlockType: randomBlockType
+        shape: randomBlock,
+        index: randomListIndex,
+        pos: [randomX, randomY],
+        type: randomBlockType
     }
 
 }
@@ -236,7 +53,39 @@ export function getRotatedBlock(blockType, blockIndex, direction = true) {
         nextBlockIndex = blockIndex - 1 >= 0 ? blockIndex - 1 : 3;
     }
     return {
-        block: blocks[blockType][nextBlockIndex],
-        blockIndex: nextBlockIndex
+        shape: blocks[blockType][nextBlockIndex],
+        index: nextBlockIndex
     };
+}
+
+// 获取block的边界信息,用于边界检测
+export function getBlockBorderAttr(block) {
+    const len = block.length;
+    let colPointlist = [];
+    let highestPoint = 0;
+    let lowestPoint = 0;
+
+    for (let i = 0; i < len; i++) {
+        if (block[i].includes(1)) {
+            highestPoint = i;
+            break;
+        }
+    }
+    for (let i = len - 1; i > 0; i--) {
+        if (block[i].includes(1)) {
+            lowestPoint = i;
+            break;
+        }
+    }
+    block.forEach(row=> {
+        row.forEach((col, index)=> {
+            if (col === 1) colPointlist.push(index);
+        });
+    });
+    return {
+        leftBorder: Math.min.apply(null, colPointlist),
+        rightBorder: Math.max.apply(null, colPointlist),
+        topBorder: highestPoint,
+        bottomBorder: lowestPoint
+    }
 }
