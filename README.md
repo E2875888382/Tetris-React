@@ -11,3 +11,5 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 `npm i`
 
 `npm run dev`
+
+### 现main分支代码存在可利用的的bug（方向键操作互斥），可以简单刷分，哈哈！！！
